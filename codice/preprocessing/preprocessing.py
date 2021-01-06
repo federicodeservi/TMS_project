@@ -13,7 +13,6 @@ from tensorflow.keras.layers import Input, LSTM, Embedding, Dense, Concatenate, 
 from tensorflow.compat.v1.keras.layers import CuDNNLSTM
 from tensorflow.keras.models import Model
 from tensorflow.keras.callbacks import EarlyStopping
-from attention import AttentionLayer
 import warnings
 import re, string, unicodedata
 import nltk
@@ -57,7 +56,7 @@ def load_stories(directory):
     # load all stories in a directory
     stories = []
     highlights =[]
-    for name in listdir(directory)[:10000]:
+    for name in listdir(directory)[:1000]:
         filename = directory + '/' + name
 		# load document
         doc = load_doc(filename)
@@ -93,6 +92,7 @@ def replace_numbers(words):
 
 def remove_stopwords(words):
     """Remove stop words"""
+    stop_words = set(stopwords.words('english')) 
     new_words = [w for w in words.split() if not w in stop_words]
     long_words=[]
     for i in new_words:
@@ -122,7 +122,7 @@ def lemmatize(words):
 
 def preprocessing_data():
 
-    directory = r"C:\Users\feder\Desktop\cnn\stories/"
+    directory = "../dati/cnn/stories"
     data = load_stories(directory)
     print("*************** IMPORT THE DATA ***************")
     print('Loaded Stories %d' % len(data))
@@ -282,14 +282,15 @@ def preprocessing_data():
     x_val=np.delete(x_val,ind, axis=0)
 
     print("*************** SAVE THE FILES ***************")
-    np.save("final_data/x_tr.npy", x_tr)
-    np.save("final_data/y_tr.npy", y_tr)
-    np.save("final_data/x_val.npy", x_val)
-    np.save("final_data/y_val.npy", y_val)
+    np.save("../final_data/x_tr.npy", x_tr)
+    np.save("../final_data/y_tr.npy", y_tr)
+    np.save("../final_data/x_val.npy", x_val)
+    np.save("../final_data/y_val.npy", y_val)
 
 
     # saving
     with open('y_tokenizer.pickle', 'wb') as handle:
         pickle.dump(y_tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
     
-    return x_tr, y_tr, x_val, y_val
+    return x_voc, y_voc
+    

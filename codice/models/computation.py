@@ -14,7 +14,7 @@ from tensorflow.keras.layers import Input, LSTM, Embedding, Dense, Concatenate, 
 from tensorflow.compat.v1.keras.layers import CuDNNLSTM
 from tensorflow.keras.models import Model
 from tensorflow.keras.callbacks import EarlyStopping
-from attention import AttentionLayer
+from models.attention import AttentionLayer
 import warnings
 import re, string, unicodedata
 import nltk
@@ -84,8 +84,7 @@ def seq2text(input_seq):
             newString=newString+reverse_source_word_index[i]+' '
     return newString
 
-def computation():
-
+def computation(x_voc, y_voc):
     max_text_len=300
     max_summary_len=12
 
@@ -150,42 +149,42 @@ def inference():
     max_text_len=300
     max_summary_len=12
 
-    if not os.path.exists('weights.h5'):
-        computation()
-    else:
-        model = load("weights.h5")
-        reverse_target_word_index=y_tokenizer.index_word
-        reverse_source_word_index=x_tokenizer.index_word
-        target_word_index=y_tokenizer.word_index
+    #if not os.path.exists('weights.h5'):
+    #    computation(x_voc, y_voc)
+    #else:
+    model = load("weights.h5")
+    reverse_target_word_index=y_tokenizer.index_word
+    reverse_source_word_index=x_tokenizer.index_word
+    target_word_index=y_tokenizer.word_index
 
-        # Encode the input sequence to get the feature vector
-        encoder_model = Model(inputs=encoder_inputs,outputs=[encoder_outputs, state_h, state_c])
+    # Encode the input sequence to get the feature vector
+    encoder_model = Model(inputs=encoder_inputs,outputs=[encoder_outputs, state_h, state_c])
 
-        # Decoder setup
-        # Below tensors will hold the states of the previous time step
-        decoder_state_input_h = Input(shape=(latent_dim,))
-        decoder_state_input_c = Input(shape=(latent_dim,))
-        decoder_hidden_state_input = Input(shape=(max_text_len,latent_dim))
+    # Decoder setup
+    # Below tensors will hold the states of the previous time step
+    decoder_state_input_h = Input(shape=(latent_dim,))
+    decoder_state_input_c = Input(shape=(latent_dim,))
+    decoder_hidden_state_input = Input(shape=(max_text_len,latent_dim))
 
-        # Get the embeddings of the decoder sequence
-        dec_emb2= dec_emb_layer(decoder_inputs) 
-        # To predict the next word in the sequence, set the initial states to the states from the previous time step
-        decoder_outputs2, state_h2, state_c2 = decoder_lstm(dec_emb2, initial_state=[decoder_state_input_h, decoder_state_input_c])
+    # Get the embeddings of the decoder sequence
+    dec_emb2= dec_emb_layer(decoder_inputs) 
+    # To predict the next word in the sequence, set the initial states to the states from the previous time step
+    decoder_outputs2, state_h2, state_c2 = decoder_lstm(dec_emb2, initial_state=[decoder_state_input_h, decoder_state_input_c])
 
-        #attention inference
-        attn_out_inf, attn_states_inf = attn_layer([decoder_hidden_state_input, decoder_outputs2])
-        decoder_inf_concat = Concatenate(axis=-1, name='concat')([decoder_outputs2, attn_out_inf])
+    #attention inference
+    attn_out_inf, attn_states_inf = attn_layer([decoder_hidden_state_input, decoder_outputs2])
+    decoder_inf_concat = Concatenate(axis=-1, name='concat')([decoder_outputs2, attn_out_inf])
 
-        # A dense softmax layer to generate prob dist. over the target vocabulary
-        decoder_outputs2 = decoder_dense(decoder_inf_concat) 
+    # A dense softmax layer to generate prob dist. over the target vocabulary
+    decoder_outputs2 = decoder_dense(decoder_inf_concat) 
 
-        # Final decoder model
-        decoder_model = Model(
-            [decoder_inputs] + [decoder_hidden_state_input,decoder_state_input_h, decoder_state_input_c],
-            [decoder_outputs2] + [state_h2, state_c2])
+    # Final decoder model
+    decoder_model = Model(
+        [decoder_inputs] + [decoder_hidden_state_input,decoder_state_input_h, decoder_state_input_c],
+        [decoder_outputs2] + [state_h2, state_c2])
 
-        for i in range(0,30):
-            print("Review:",seq2text(x_tr[i]))
-            print("Original summary:",seq2summary(y_tr[i]))
-            print("Predicted summary:",decode_sequence(x_tr[i].reshape(1,max_text_len)))
-            print("\n")
+    for i in range(0,30):
+        print("Review:",seq2text(x_tr[i]))
+        print("Original summary:",seq2summary(y_tr[i]))
+        print("Predicted summary:",decode_sequence(x_tr[i].reshape(1,max_text_len)))
+        print("\n")
