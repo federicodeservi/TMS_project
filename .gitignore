@@ -6,3 +6,5 @@
 **/dati/cnn/
 **/notebook_version/models/bidirectional/10epochs/saved_model
 **/notebook_version/models/monodirectional/10epochs/saved_model
+**/notebook_version/models/bidirectional/20epochs/saved_model
+**/notebook_version/models/monodirectional/20epochs/saved_model
