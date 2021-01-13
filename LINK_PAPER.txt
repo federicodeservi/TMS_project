@@ -1,1 +1,9 @@
 https://stats.stackexchange.com/questions/301626/interpreting-rouge-scores
+http://nlpprogress.com/english/summarization.html
+https://github.com/abisee/cnn-dailymail
+https://www.analyticsvidhya.com/blog/2019/06/comprehensive-guide-text-summarization-using-deep-learning-python/
+https://medium.com/@surmenok/how-to-run-text-summarization-with-tensorflow-d4472587602d
+https://machinelearningmastery.com/prepare-news-articles-text-summarization/
+https://cs.nyu.edu/~kcho/DMQA/
+https://web.stanford.edu/class/archive/cs/cs224n/cs224n.1174/reports/2762104.pdf
+
