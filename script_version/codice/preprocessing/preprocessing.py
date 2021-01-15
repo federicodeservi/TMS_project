@@ -34,15 +34,13 @@ warnings.filterwarnings("ignore")
 
 
 def load_doc(filename):
-    # load doc into memory
 	file = open(filename, encoding='utf-8')
 	text = file.read()
 	file.close()
 	return text
 
-
+# split a document into news story and highlights
 def split_story(doc):
-    # split a document into news story and highlights
 	# find first highlight
 	index = doc.find('@highlight')
 	# split into story and highlights
@@ -51,12 +49,11 @@ def split_story(doc):
 	highlights = [h.strip() for h in highlights if len(h) > 0]
 	return story, highlights
 
-
+# load all stories in a directory
 def load_stories(directory):
-    # load all stories in a directory
     stories = []
     highlights =[]
-    for name in listdir(directory)[:1000]:
+    for name in listdir(directory)[:10000]:
         filename = directory + '/' + name
 		# load document
         doc = load_doc(filename)
@@ -68,6 +65,7 @@ def load_stories(directory):
     data = pd.DataFrame()
     data["story"] = stories
     data["highlight"] = highlights
+    
     return  data
 
 def remove_non_ascii(words):
@@ -121,7 +119,7 @@ def lemmatize(words):
     return words
 
 def preprocessing_data():
-
+    
     directory = "../dati/cnn/stories"
     data = load_stories(directory)
     print("*************** IMPORT THE DATA ***************")
@@ -139,8 +137,8 @@ def preprocessing_data():
     for t in data['highlight']:
         cleaned_highlight.append(normalize(t))
 
-    data['normalized_text'] = cleaned_story
-    data['normalized_highlight'] = cleaned_highlight
+    data['normalized_text']=cleaned_story
+    data['normalized_highlight']=cleaned_highlight
     data['normalized_highlight'].replace('', np.nan, inplace=True)
     data.dropna(axis=0,inplace=True)
 
@@ -161,13 +159,14 @@ def preprocessing_data():
     data['cleaned_highlight'] = data['cleaned_highlight'].apply(lambda x : 'starttoken '+ x + ' endtoken')
     data = data[["cleaned_text", "cleaned_highlight"]]
 
-    x_tr,x_val,y_tr,y_val=train_test_split(data['cleaned_text'],data['cleaned_highlight'],test_size=0.1,random_state=0,shuffle=True) 
-
+    x_tr,x_val,y_tr,y_val=train_test_split(data['cleaned_text'],data['cleaned_highlight'],test_size=0.1,random_state=0,shuffle=True)
+    
     print("*************** TOKENIZATION ***************")
     x_tokenizer = Tokenizer() 
     x_tokenizer.fit_on_texts(list(x_tr))
 
     thresh=4
+
     cnt=0
     tot_cnt=0
     freq=0
@@ -179,9 +178,11 @@ def preprocessing_data():
         if(value<thresh):
             cnt=cnt+1
             freq=freq+value
-        
+    
     print("% of rare words in vocabulary:",(cnt/tot_cnt)*100)
     print("Total Coverage of rare words:",(freq/tot_freq)*100)
+
+    print("*************** PLOT ***************")
     text_word_count = []
     summary_word_count = []
 
@@ -193,7 +194,6 @@ def preprocessing_data():
         summary_word_count.append(len(i.split()))
 
     length_df = pd.DataFrame({'text':text_word_count, 'summary':summary_word_count})
-
     length_df.hist(bins = 30)
     plt.show()
 
@@ -205,7 +205,7 @@ def preprocessing_data():
 
     max_text_len=300
     max_summary_len=12
-
+    print("*************** INPUT TOKENIZATION ***************")
     #prepare a tokenizer for reviews on training data
     x_tokenizer = Tokenizer(num_words=tot_cnt-cnt) 
     x_tokenizer.fit_on_texts(list(x_tr))
@@ -220,11 +220,14 @@ def preprocessing_data():
     #size of vocabulary ( +1 for padding token)
     x_voc = x_tokenizer.num_words + 1
 
+
+    print("*************** TARGET TOKENIZATION ***************")
     #prepare a tokenizer for reviews on training data
     y_tokenizer = Tokenizer()   
     y_tokenizer.fit_on_texts(list(y_tr))
 
     thresh=6
+
     cnt=0
     tot_cnt=0
     freq=0
@@ -239,6 +242,7 @@ def preprocessing_data():
         
     print("% of rare words in vocabulary:",(cnt/tot_cnt)*100)
     print("Total Coverage of rare words:",(freq/tot_freq)*100)
+  
 
     #prepare a tokenizer for reviews on training data
     y_tokenizer = Tokenizer(num_words=tot_cnt-cnt) 
@@ -289,8 +293,14 @@ def preprocessing_data():
 
 
     # saving
-    with open('y_tokenizer.pickle', 'wb') as handle:
-        pickle.dump(y_tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    with open('../tokenizers_vars/y_tokenizer.pickle', 'wb') as handle:
+    pickle.dump(y_tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    with open('../tokenizers_vars/x_tokenizer.pickle', 'wb') as handle:
+        pickle.dump(x_tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    with open('../tokenizers_vars/vars.pkl', 'wb') as f:  
+        pickle.dump([x_voc, y_voc], f)
     
     return x_voc, y_voc
     
