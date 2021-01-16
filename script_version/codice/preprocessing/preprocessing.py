@@ -120,7 +120,7 @@ def lemmatize(words):
 
 def preprocessing_data():
     
-    directory = "../../dati/cnn/stories"
+    directory = "../dati/cnn/stories"
     data = load_stories(directory)
     print("*************** IMPORT THE DATA ***************")
     print('Loaded Stories %d' % len(data))

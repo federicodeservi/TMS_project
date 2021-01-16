@@ -191,11 +191,11 @@ def computation_bidirectional():
     
     #model.save('models/bidirectional/10epochs/saved_model')
 
-    history = pd.read_csv('models/bidirectional/10epochs/training_bidirectional_10.log')
+    history = pd.read_csv('models/bidirectional/10epochs/training_bidirectional_10.log', sep=";")
     loss_plot(history)
 
 
-def inference_bidirectional():
+''' def inference_bidirectional():
     
     max_text_len=300
     max_summary_len=12
@@ -324,19 +324,20 @@ def inference_bidirectional():
 
 def inference_monodirectional():
     pass
+'''
 
     
 def computation(model):
 
     if model == "bidirectional_model":
-        if not os.path.exists('models/bidirectional/10epochs'):
-            computation_bidirectional()
-        else:
-            inference_bidirectional()
+        #if not os.path.exists('models/bidirectional/10epochs'):
+        computation_bidirectional()
+        #else:
+           # inference_bidirectional()
     
     else:
         if not os.path.exists('models/monodirectional/10epochs'):
             computation_monodirectional()
-        else:
-            inference_monodirectional()
+        #else:
+         #   inference_monodirectional()
     
