@@ -302,5 +302,5 @@ def preprocessing_data():
     with open('../tokenizers_vars/vars.pkl', 'wb') as f:  
         pickle.dump([x_voc, y_voc], f)
     
-    print("*"*20, "PREPROCESSING FINITO", "*"*20)
+    print("*"*20, "PREPROCESSING TRAIN FINITO", "*"*20)
     

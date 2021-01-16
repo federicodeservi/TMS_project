@@ -1,7 +1,8 @@
 '''
 Main module to execute all the steps of the project with the following command line parameters:
 '''
-from preprocessing.preprocessing import preprocessing_data
+from preprocessing.preprocessing_train import preprocessing_data
+from preprocessing.preprocessing_test import preprocessing_data_test
 
 from models.computation import computation
 from models.computation import inference
@@ -33,14 +34,7 @@ def main():
     '''
     Main function that execute computation
     '''
-    '''
-    if not os.path.exists('../final_data/x_tr.npy'):
-        x_voc, y_voc = preprocessing_data()
-        computation(x_voc, y_voc)
-        inference(x_voc, y_voc)
-    else:
-        inference(x_voc, y_voc)
-    '''
+
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-m', '--model', type=str, required=False, default="bidirectional_model",
@@ -69,9 +63,14 @@ def main():
     if not os.path.exists('models/monodirectional/20epochs'):
         mkdir_p('models/monodirectional/20epochs')
 
-    preprocessing_data()
+
+    # Salta il preprocessing se è già stato fatto
+    if not os.path.exists('../final_data/x_tr.npy'):    
+        preprocessing_data()
+    if not os.path.exists('../final_data/x_test.npy'):   
+        preprocessing_data_test()
+
     computation(args.model)
-    #inference()
 
 
 if __name__ == "__main__":

@@ -32,12 +32,12 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras import backend as K 
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 lemmatizer = WordNetLemmatizer() 
-from rouge import rouge_n_sentence_level
-from rouge import rouge_l_sentence_level
-from rouge import rouge_n_summary_level
-from rouge import rouge_l_summary_level
-from rouge import rouge_w_sentence_level
-from rouge import rouge_w_summary_level
+#from rouge import rouge_n_sentence_level
+#from rouge import rouge_l_sentence_level
+#from rouge import rouge_n_summary_level
+#from rouge import rouge_l_summary_level
+#from rouge import rouge_w_sentence_level
+#from rouge import rouge_w_summary_level
 import pickle
 
 def decode_sequence(input_seq):
