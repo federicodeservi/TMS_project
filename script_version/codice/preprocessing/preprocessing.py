@@ -53,7 +53,7 @@ def split_story(doc):
 def load_stories(directory):
     stories = []
     highlights =[]
-    for name in listdir(directory)[:10000]:
+    for name in listdir(directory)[:10]:
         filename = directory + '/' + name
 		# load document
         doc = load_doc(filename)
@@ -120,7 +120,7 @@ def lemmatize(words):
 
 def preprocessing_data():
     
-    directory = "../dati/cnn/stories"
+    directory = "../../dati/cnn/stories"
     data = load_stories(directory)
     print("*************** IMPORT THE DATA ***************")
     print('Loaded Stories %d' % len(data))
@@ -294,7 +294,7 @@ def preprocessing_data():
 
     # saving
     with open('../tokenizers_vars/y_tokenizer.pickle', 'wb') as handle:
-    pickle.dump(y_tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(y_tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     with open('../tokenizers_vars/x_tokenizer.pickle', 'wb') as handle:
         pickle.dump(x_tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -302,5 +302,5 @@ def preprocessing_data():
     with open('../tokenizers_vars/vars.pkl', 'wb') as f:  
         pickle.dump([x_voc, y_voc], f)
     
-    return x_voc, y_voc
+    print("*"*20, "PREPROCESSING FINITO", "*"*20)
     

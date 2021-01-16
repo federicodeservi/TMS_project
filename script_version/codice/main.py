@@ -8,7 +8,7 @@ from models.computation import inference
 import time
 import pandas as pd
 import os
-
+import argparse
 
 
 pd.options.mode.chained_assignment = None
@@ -41,10 +41,37 @@ def main():
     else:
         inference(x_voc, y_voc)
     '''
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-m', '--model', type=str, required=False, default="bidirectional_model",
+    help="Insert a tipe of model between 'bidirectional' or 'monodirectional'!")
+    args = parser.parse_args()
+
     mkdir_p("../final_data")
-    x_voc, y_voc =  preprocessing_data()
-    computation(x_voc, y_voc)
-    inference()
+
+    # Crea le directory necessarie se non esistono
+
+    if not os.path.exists('models/bidirectional'):
+        mkdir_p('models/bidirectional')
+    
+    if not os.path.exists('models/bidirectional/10epochs'):
+        mkdir_p('models/bidirectional/10epochs')
+    
+    if not os.path.exists('models/bidirectional/20epochs'):
+        mkdir_p('models/bidirectional/20epochs')
+
+    if not os.path.exists('models/monodirectional'):
+        mkdir_p('models/monodirectional')
+        
+    if not os.path.exists('models/monodirectional/10epochs'):
+        mkdir_p('models/monodirectional/10epochs')
+    
+    if not os.path.exists('models/monodirectional/20epochs'):
+        mkdir_p('models/monodirectional/20epochs')
+
+    preprocessing_data()
+    computation(args.model)
+    #inference()
 
 
 if __name__ == "__main__":
