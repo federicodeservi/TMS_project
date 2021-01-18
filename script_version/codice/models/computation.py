@@ -32,16 +32,16 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras import backend as K 
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 lemmatizer = WordNetLemmatizer() 
-#from rouge import rouge_n_sentence_level
-#from rouge import rouge_l_sentence_level
-#from rouge import rouge_n_summary_level
-#from rouge import rouge_l_summary_level
-#from rouge import rouge_w_sentence_level
-#from rouge import rouge_w_summary_level
+from rouge import rouge_n_sentence_level
+from rouge import rouge_l_sentence_level
+from rouge import rouge_n_summary_level
+from rouge import rouge_l_summary_level
+from rouge import rouge_w_sentence_level
+from rouge import rouge_w_summary_level
 import pickle
-import pickle5
+import pickle
 
-def decode_sequence(input_seq):
+def decode_sequence(input_seq, encoder_model, target_word_index, decoder_model, reverse_target_word_index, max_summary_len):
     # Encode the input as state vectors.
     e_out, e_h, e_c = encoder_model.predict(input_seq)
     
@@ -58,6 +58,7 @@ def decode_sequence(input_seq):
         output_tokens, h, c = decoder_model.predict([target_seq] + [e_out, e_h, e_c])
         # Sample a token
         sampled_token_index = np.argmax(output_tokens[0, -1, :])
+        
         sampled_token = reverse_target_word_index[sampled_token_index]
         
         if(sampled_token!='endtoken'):
@@ -76,14 +77,14 @@ def decode_sequence(input_seq):
 
     return decoded_sentence
 
-def seq2summary(input_seq):
+def seq2summary(input_seq,target_word_index, reverse_target_word_index ):
     newString=''
     for i in input_seq:
         if((i!=0 and i!=target_word_index['starttoken']) and i!=target_word_index['endtoken']):
             newString=newString+reverse_target_word_index[i]+' '
     return newString
 
-def seq2text(input_seq):
+def seq2text(input_seq, reverse_source_word_index):
     newString=''
     for i in input_seq:
         if(i!=0):
@@ -91,8 +92,8 @@ def seq2text(input_seq):
     return newString
 
 def loss_plot(history):
-    plt.plot(history['loss'], label='train')
-    plt.plot(history['val_loss'], label='test')
+    plt.plot(history.history['loss'], label='train')
+    plt.plot(history.history['val_loss'], label='test')
     plt.legend()
 
 def open_test_data_y():
@@ -157,7 +158,7 @@ def computation_bidirectional(x_tr, y_tr, x_val, y_val, y_tokenizer, x_tokenizer
     model.summary()
     model.compile(optimizer='rmsprop', loss='sparse_categorical_crossentropy')
 
-    model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(filepath="drive/MyDrive/bidirectional/10epochs/saved_model",
+    model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(filepath="models/bidirectional/10epochs/saved_model",
                                                                     save_weights_only=False,
                                                                     monitor='val_loss',
                                                                     mode='min',
@@ -171,18 +172,21 @@ def computation_bidirectional(x_tr, y_tr, x_val, y_val, y_tokenizer, x_tokenizer
                   epochs=1, verbose = 1, callbacks=[model_checkpoint_callback, csv_logger],
                   validation_data=([x_val,y_val[:,:-1]], y_val.reshape(y_val.shape[0],y_val.shape[1], 1)[:,1:]))
     
-    #model.save('models/bidirectional/10epochs/saved_model')
+    model.save('models/bidirectional/10epochs/saved_model')
 
-    history = pd.read_csv('models/bidirectional/10epochs/training_bidirectional_10.log', sep=";")
+    #history = pd.read_csv('models/bidirectional/10epochs/training_bidirectional_10.log', sep=";")
     loss_plot(history)
 
 
-def inference_bidirectional(x_tewt, y_test, x_tokenizer, y_tokenizer):
+def inference_bidirectional(x_test, y_test, x_tokenizer, y_tokenizer):
     
     max_text_len=300
     max_summary_len=12
    
     model = tf.keras.models.load_model('models/bidirectional/10epochs/saved_model')
+
+    print(model.summary())
+
 
     reverse_target_word_index=y_tokenizer.index_word
     reverse_source_word_index=x_tokenizer.index_word
@@ -229,9 +233,9 @@ def inference_bidirectional(x_tewt, y_test, x_tokenizer, y_tokenizer):
         [decoder_outputs2] + [state_h2, state_c2])
     
     for i in range(0,1):
-        print("Review:",seq2text(x_test[i]))
-        print("Original summary:",seq2summary(y_test[i]))
-        print("Predicted summary:",decode_sequence(x_test[i].reshape(1,max_text_len)))
+        print("Review:",seq2text(x_test[i],reverse_source_word_index))
+        print("Original summary:",seq2summary(y_test[i], target_word_index , reverse_target_word_index))
+        print("Predicted summary:",decode_sequence(x_test[i].reshape(1,max_text_len), encoder_model, target_word_index, decoder_model, reverse_target_word_index, max_summary_len))
         print("\n")
 
     original_text = []
@@ -239,11 +243,11 @@ def inference_bidirectional(x_tewt, y_test, x_tokenizer, y_tokenizer):
     created_summary = []
 
     for i in range(0,2000):
-        clear_output(wait=True)
-        print(i)
-        original_text.append(seq2text(x_test[i]))
-        original_summary.append(seq2summary(y_test[i]))
-        created_summary.append(decode_sequence(x_test[i].reshape(1,max_text_len)))
+        #barra caricamento
+
+        original_text.append(seq2text(x_test[i] ,reverse_source_word_index))
+        original_summary.append(seq2summary(y_test[i], target_word_index, reverse_target_word_index))
+        created_summary.append(decode_sequence(x_test[i].reshape(1,max_text_len), encoder_model, target_word_index, decoder_model, reverse_target_word_index, max_summary_len))
     
     results = pd.DataFrame()
     results["Original_text"] = original_text
@@ -253,7 +257,7 @@ def inference_bidirectional(x_tewt, y_test, x_tokenizer, y_tokenizer):
     results.to_csv("models/bidirectional/10epochs/results_predictions_bi_10.csv")
 
     # Compute il rouge
-    results=pd.read_csv("results_predictions_bi_10.csv")
+    results=pd.read_csv("models/bidirectional/10epochs/results_predictions_bi_10.csv")
     results["Created_summary"].replace(np.nan, 'NaN', inplace=True)
     reference_sentences = results["Original_summary"].to_list()
     summary_sentences = results["Created_summary"].to_list()
@@ -266,8 +270,7 @@ def inference_bidirectional(x_tewt, y_test, x_tokenizer, y_tokenizer):
     list_precision_r1 = []
 
     for i in range(0, len(reference_sentences)):
-        clear_output(wait=True)
-        print(i)
+        #barra caricamento
         
         reference_sentence = reference_sentences[i].split()
         summary_sentence = summary_sentences[i].split()
@@ -405,9 +408,9 @@ def inference_monodirectional(x_test, y_test, x_tokenizer, y_tokenizer):
         [decoder_outputs2] + [state_h2, state_c2])
     
     for i in range(0,1):
-        print("Review:",seq2text(x_test[i]))
-        print("Original summary:",seq2summary(y_test[i]))
-        print("Predicted summary:",decode_sequence(x_test[i].reshape(1,max_text_len)))
+        print("Review:",seq2text(x_test[i], reverse_source_word_index))
+        print("Original summary:",seq2summary(y_test[i],target_word_index, reverse_target_word_index))
+        print("Predicted summary:",decode_sequence(x_test[i].reshape(1,max_text_len), encoder_model, target_word_index, decoder_model, reverse_target_word_index, max_summary_len))
         print("\n")
     
     original_text = []
@@ -415,11 +418,11 @@ def inference_monodirectional(x_test, y_test, x_tokenizer, y_tokenizer):
     created_summary = []
 
     for i in range(0,2000):
-        clear_output(wait=True)
-        print(i)
-        original_text.append(seq2text(x_test[i]))
-        original_summary.append(seq2summary(y_test[i]))
-        created_summary.append(decode_sequence(x_test[i].reshape(1,max_text_len)))
+        #barra caricamiento
+
+        original_text.append(seq2text(x_test[i], reverse_source_word_index))
+        original_summary.append(seq2summary(y_test[i], target_word_index, reverse_target_word_index))
+        created_summary.append(decode_sequence(x_test[i].reshape(1,max_text_len), encoder_model, target_word_index, decoder_model, reverse_target_word_index, max_summary_len))
 
     results = pd.DataFrame()
     results["Original_text"] = original_text
@@ -428,7 +431,7 @@ def inference_monodirectional(x_test, y_test, x_tokenizer, y_tokenizer):
 
     results.to_csv("models/monodirectional/10epochs/results_predictions_mono_10.csv")
 
-    results=pd.read_csv("results_predictions_mono_10.csv")
+    results=pd.read_csv("models/monodirectional/10epochs/results_predictions_mono_10.csv")
     results["Created_summary"].replace(np.nan, 'NaN', inplace=True)
 
     reference_sentences = results["Original_summary"].to_list()
@@ -442,8 +445,7 @@ def inference_monodirectional(x_test, y_test, x_tokenizer, y_tokenizer):
     list_precision_r1 = []
 
     for i in range(0, len(reference_sentences)):
-        clear_output(wait=True)
-        print(i)
+        #barra di frate maronno
         
         reference_sentence = reference_sentences[i].split()
         summary_sentence = summary_sentences[i].split()
@@ -482,19 +484,20 @@ def computation(model):
     y_test = np.load("../final_data/y_test.npy")
 
     with open_test_data_y() as f:
-        y_tokenizer = pickle5.load(f) 
+        y_tokenizer = pickle.load(f) 
 
     with open_test_data_x() as f:
-        x_tokenizer = pickle5.load(f) 
+        x_tokenizer = pickle.load(f) 
 
     with open_vars() as f: 
-        x_voc, y_voc = pickle5.load(f)
+        x_voc, y_voc = pickle.load(f)
 
     with open_test_data_y() as f:
-        y_tokenizer = pickle5.load(f) 
+        y_tokenizer = pickle.load(f) 
 
     with open_test_data_x() as f:
-        x_tokenizer = pickle5.load(f)
+        x_tokenizer = pickle.load(f)
+
 
     if model == "bidirectional_model":
         if not os.path.exists('models/bidirectional/10epochs'):

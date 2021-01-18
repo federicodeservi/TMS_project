@@ -27,7 +27,7 @@ from nltk.stem import LancasterStemmer, WordNetLemmatizer
 from tensorflow.keras.preprocessing.text import Tokenizer 
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 lemmatizer = WordNetLemmatizer() 
-import pickle5
+import pickle
 
 pd.set_option("display.max_colwidth", 200)
 warnings.filterwarnings("ignore")
@@ -170,10 +170,10 @@ def preprocessing_data_test():
     y_test = data['cleaned_highlight']    
 
     with open_test_data_y() as f:
-        y_tokenizer = pickle5.load(f) 
+        y_tokenizer = pickle.load(f) 
 
     with open_test_data_x() as f:
-        x_tokenizer = pickle5.load(f) 
+        x_tokenizer = pickle.load(f) 
     
     thresh=4
 
