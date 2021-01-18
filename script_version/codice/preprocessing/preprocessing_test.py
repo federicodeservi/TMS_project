@@ -27,7 +27,7 @@ from nltk.stem import LancasterStemmer, WordNetLemmatizer
 from tensorflow.keras.preprocessing.text import Tokenizer 
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 lemmatizer = WordNetLemmatizer() 
-import pickle
+import pickle5
 
 pd.set_option("display.max_colwidth", 200)
 warnings.filterwarnings("ignore")
@@ -170,10 +170,10 @@ def preprocessing_data_test():
     y_test = data['cleaned_highlight']    
 
     with open_test_data_y() as f:
-        y_tokenizer = pickle.load(f) 
+        y_tokenizer = pickle5.load(f) 
 
     with open_test_data_x() as f:
-        x_tokenizer = pickle.load(f) 
+        x_tokenizer = pickle5.load(f) 
     
     thresh=4
 
@@ -213,33 +213,33 @@ def preprocessing_data_test():
             cnt=cnt+1
     print(cnt/len(data['cleaned_highlight']))
 
-    max_text_len=300
-    max_summary_len=12
+    max_text_len = 300
+    max_summary_len = 12
 
     x_test_seq = x_tokenizer.texts_to_sequences(x_test) 
     x_test = pad_sequences(x_test_seq,  maxlen=max_text_len, padding='post')
 
     thresh=6
 
-    cnt=0
-    tot_cnt=0
-    freq=0
-    tot_freq=0
+    cnt = 0
+    tot_cnt = 0
+    freq = 0
+    tot_freq = 0
 
     for key,value in y_tokenizer.word_counts.items():
-        tot_cnt=tot_cnt+1
+        tot_cnt = tot_cnt+1
         tot_freq=tot_freq+value
         if(value<thresh):
-            cnt=cnt+1
-            freq=freq+value
+            cnt = cnt+1
+            freq = freq+value
         
     print("% of rare words in vocabulary:",(cnt/tot_cnt)*100)
     print("Total Coverage of rare words:",(freq/tot_freq)*100)
 
-    y_test_seq    =   y_tokenizer.texts_to_sequences(y_test) 
+    y_test_seq = y_tokenizer.texts_to_sequences(y_test) 
 
     #padding zero upto maximum length
-    y_test    =   pad_sequences(y_test_seq, maxlen=max_summary_len, padding='post')
+    y_test = pad_sequences(y_test_seq, maxlen=max_summary_len, padding='post')
 
     ind=[]
     for i in range(len(y_test)):
@@ -250,8 +250,8 @@ def preprocessing_data_test():
         if(cnt==2):
             ind.append(i)
 
-    y_test=np.delete(y_test,ind, axis=0)
-    x_test=np.delete(x_test,ind, axis=0)
+    y_test = np.delete(y_test,ind, axis=0)
+    x_test = np.delete(x_test,ind, axis=0)
 
     np.save("../final_data/x_test.npy", x_test)
     np.save("../final_data/y_test.npy", y_test)

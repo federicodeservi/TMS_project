@@ -39,6 +39,7 @@ lemmatizer = WordNetLemmatizer()
 #from rouge import rouge_w_sentence_level
 #from rouge import rouge_w_summary_level
 import pickle
+import pickle5
 
 def decode_sequence(input_seq):
     # Encode the input as state vectors.
@@ -106,30 +107,11 @@ def open_vars():
 def inference():
     pass
 
-def computation_monodirectional():
-    pass
-
-
-def computation_bidirectional():
+def computation_bidirectional(x_tr, y_tr, x_val, y_val, y_tokenizer, x_tokenizer, x_voc, y_voc):
     if tf.test.gpu_device_name(): 
         print('Default GPU Device:{}'.format(tf.test.gpu_device_name()))
     else:
-        print("Please install GPU version of TF")
-
-    x_tr = np.load("../final_data/x_tr.npy")
-    y_tr = np.load("../final_data/y_tr.npy")
-    x_val = np.load("../final_data/x_val.npy")
-    y_val = np.load("../final_data/y_val.npy")
-
-    with open_test_data_y() as f:
-        y_tokenizer = pickle.load(f) 
-
-    with open_test_data_x() as f:
-        x_tokenizer = pickle.load(f)
-    
-    with open_vars() as f: 
-        x_voc, y_voc = pickle.load(f)
-    
+        print("Please install GPU version of TF") 
     max_text_len=300
     max_summary_len=12
     latent_dim = 300
@@ -195,20 +177,11 @@ def computation_bidirectional():
     loss_plot(history)
 
 
-''' def inference_bidirectional():
+def inference_bidirectional(x_tewt, y_test, x_tokenizer, y_tokenizer):
     
     max_text_len=300
     max_summary_len=12
-
-    x_test = np.load("../final_data/x_test.npy")
-    y_test = np.load("../final_data/y_test.npy")
-
-    with open_test_data_y() as f:
-        y_tokenizer = pickle.load(f) 
-
-    with open_test_data_x() as f:
-        x_tokenizer = pickle.load(f)
-    
+   
     model = tf.keras.models.load_model('models/bidirectional/10epochs/saved_model')
 
     reverse_target_word_index=y_tokenizer.index_word
@@ -322,22 +295,222 @@ def computation_bidirectional():
     print("Mean ROUGE-2: ", mean_rouge_r2)
     print("Mean ROUGE-1: ", mean_rouge_r1)
 
-def inference_monodirectional():
-    pass
-'''
+def computation_monodirectional():
+    max_text_len=300
+    max_summary_len=12
+
+    K.clear_session()
+
+    latent_dim = 300
+    embedding_dim=100
+
+    # Encoder
+
+    encoder_inputs = Input(shape=(max_text_len,))
+    #embedding layer
+    enc_emb =  Embedding(x_voc, embedding_dim,trainable=True)(encoder_inputs)
+    #encoder lstm 1
+    encoder_lstm1 = LSTM(latent_dim,return_sequences=True,return_state=True,dropout=0.4,recurrent_dropout=0.4)
+    encoder_outputs, state_h, state_c = encoder_lstm1(enc_emb)
+
+    # Decoder
+
+    # Set up the decoder, using `encoder_states` as initial state.
+    decoder_inputs = Input(shape=(None,))
+    #embedding layer
+    dec_emb_layer = Embedding(y_voc, embedding_dim,trainable=True)
+    dec_emb = dec_emb_layer(decoder_inputs)
+    decoder_lstm = LSTM(latent_dim, return_sequences=True, return_state=True,dropout=0.4,recurrent_dropout=0.2)
+    decoder_outputs,decoder_fwd_state, decoder_back_state = decoder_lstm(dec_emb,initial_state=[state_h, state_c])
+
+    # Attention layer
+
+    attn_layer = AttentionLayer(name='attention_layer')
+    attn_out, attn_states = attn_layer([encoder_outputs, decoder_outputs])
+
+    # Concat attention input and decoder LSTM output
+    decoder_concat_input = Concatenate(axis=-1, name='concat_layer')([decoder_outputs, attn_out])
+
+    #dense layer
+    decoder_dense =  TimeDistributed(Dense(y_voc, activation='softmax'))
+    decoder_outputs = decoder_dense(decoder_concat_input)
+
+    # Define the model 
+    model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
+
+    model.summary()
+    model.compile(optimizer='rmsprop', loss='sparse_categorical_crossentropy')
+
+    model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+    filepath="models/monodirectional/10epochs/training_monodirectional_10.log",
+    save_weights_only=False,
+    monitor='val_loss',
+    mode='min',
+    save_best_only=True)
+
+    csv_logger = tf.keras.callbacks.CSVLogger("models/monodirectional/10epochs/training_monodirectional_10.log", append=True)
+    history=model.fit([x_tr,y_tr[:,:-1]], y_tr.reshape(y_tr.shape[0],y_tr.shape[1], 1)[:,1:] ,
+                  epochs=10, verbose = 1, callbacks=[model_checkpoint_callback, csv_logger],
+                  validation_data=([x_val,y_val[:,:-1]], y_val.reshape(y_val.shape[0],y_val.shape[1], 1)[:,1:]))
+
+    model.save("models/monodirectional/10epochs/saved_model")
+    loss_plot(history)
+
+def inference_monodirectional(x_test, y_test, x_tokenizer, y_tokenizer):
+    max_text_len=300
+    max_summary_len=12
+
+    model = tf.keras.models.load_model("models/monodirectional/10epochs/saved_model")
+
+    reverse_target_word_index=y_tokenizer.index_word
+    reverse_source_word_index=x_tokenizer.index_word
+    target_word_index=y_tokenizer.word_index
+
+
+    latent_dim = 300
+    embedding_dim=100
+
+
+    # Encode the input sequence to get the feature vector
+    encoder_inputs = model.input[0]   # input_1
+    encoder_outputs, state_h, state_c = model.layers[4].output 
+    encoder_model = Model(inputs=encoder_inputs,outputs=[encoder_outputs, state_h, state_c])
+
+    # Decoder setup
+    # Below tensors will hold the states of the previous time step
+    decoder_inputs = model.input[1]
+    decoder_state_input_h = Input(shape=(latent_dim,), name='dec_st_in_h')
+    decoder_state_input_c = Input(shape=(latent_dim,), name='dec_st_in_c')
+    decoder_hidden_state_input = Input(shape=(max_text_len,latent_dim))
+
+    # Get the embeddings of the decoder sequence
+    dec_emb_layer = model.layers[3]
+    dec_emb2= dec_emb_layer(decoder_inputs) 
+    # To predict the next word in the sequence, set the initial states to the states from the previous time step
+    decoder_lstm = model.layers[5]
+    decoder_outputs2, state_h2, state_c2 = decoder_lstm(dec_emb2, initial_state=[decoder_state_input_h, decoder_state_input_c])
+
+    #attention inference
+    attn_layer = model.layers[6]
+    attn_out_inf, attn_states_inf = attn_layer([decoder_hidden_state_input, decoder_outputs2])
+    decoder_inf_concat = Concatenate(axis=-1, name='concat')([decoder_outputs2, attn_out_inf])
+
+    # A dense softmax layer to generate prob dist. over the target vocabulary
+    decoder_dense = model.layers[8]
+    decoder_outputs2 = decoder_dense(decoder_inf_concat) 
+
+    # Final decoder model
+    decoder_model = Model(
+        [decoder_inputs] + [decoder_hidden_state_input,decoder_state_input_h, decoder_state_input_c],
+        [decoder_outputs2] + [state_h2, state_c2])
+    
+    for i in range(0,1):
+        print("Review:",seq2text(x_test[i]))
+        print("Original summary:",seq2summary(y_test[i]))
+        print("Predicted summary:",decode_sequence(x_test[i].reshape(1,max_text_len)))
+        print("\n")
+    
+    original_text = []
+    original_summary = []
+    created_summary = []
+
+    for i in range(0,2000):
+        clear_output(wait=True)
+        print(i)
+        original_text.append(seq2text(x_test[i]))
+        original_summary.append(seq2summary(y_test[i]))
+        created_summary.append(decode_sequence(x_test[i].reshape(1,max_text_len)))
+
+    results = pd.DataFrame()
+    results["Original_text"] = original_text
+    results["Original_summary"] = original_summary
+    results["Created_summary"] = created_summary
+
+    results.to_csv("models/monodirectional/10epochs/results_predictions_mono_10.csv")
+
+    results=pd.read_csv("results_predictions_mono_10.csv")
+    results["Created_summary"].replace(np.nan, 'NaN', inplace=True)
+
+    reference_sentences = results["Original_summary"].to_list()
+    summary_sentences = results["Created_summary"].to_list()
+
+    list_rouge_r2 = []
+    list_recall_r2 = []
+    list_precision_r2 = []
+    list_rouge_r1= []
+    list_recall_r1 = []
+    list_precision_r1 = []
+
+    for i in range(0, len(reference_sentences)):
+        clear_output(wait=True)
+        print(i)
+        
+        reference_sentence = reference_sentences[i].split()
+        summary_sentence = summary_sentences[i].split()
+        
+        # Calculate ROUGE-2.
+        recall_r2, precision_r2, rouge_r2 = rouge_n_sentence_level(summary_sentence, reference_sentence, 2)
+
+        list_rouge_r2.append(rouge_r2)
+        list_recall_r2.append(recall_r2)
+        list_precision_r2.append(precision_r2)
+
+        # Calculate ROUGE-1.
+        recall_r1, precision_r1, rouge_r1 = rouge_n_sentence_level(summary_sentence, reference_sentence, 1)
+
+        list_rouge_r1.append(rouge_r1)
+        list_recall_r1.append(recall_r1)
+        list_precision_r1.append(precision_r1)
+
+
+
+
+    mean_rouge_r2 = statistics.mean(list_rouge_r2)  
+    mean_rouge_r1 = statistics.mean(list_rouge_r1)  
+
+    print("Mean ROUGE-2: ", mean_rouge_r2)
+    print("Mean ROUGE-1: ", mean_rouge_r1)
+
 
     
 def computation(model):
+    x_tr = np.load("../final_data/x_tr.npy")
+    y_tr = np.load("../final_data/y_tr.npy")
+    x_val = np.load("../final_data/x_val.npy")
+    y_val = np.load("../final_data/y_val.npy")
+    x_test = np.load("../final_data/x_test.npy")
+    y_test = np.load("../final_data/y_test.npy")
+
+    with open_test_data_y() as f:
+        y_tokenizer = pickle5.load(f) 
+
+    with open_test_data_x() as f:
+        x_tokenizer = pickle5.load(f) 
+
+    with open_vars() as f: 
+        x_voc, y_voc = pickle5.load(f)
+
+    with open_test_data_y() as f:
+        y_tokenizer = pickle5.load(f) 
+
+    with open_test_data_x() as f:
+        x_tokenizer = pickle5.load(f)
 
     if model == "bidirectional_model":
-        #if not os.path.exists('models/bidirectional/10epochs'):
-        computation_bidirectional()
-        #else:
-           # inference_bidirectional()
-    
+        if not os.path.exists('models/bidirectional/10epochs'):
+            computation_bidirectional(x_tr, y_tr, x_val, y_val, y_tokenizer, x_tokenizer, x_voc, y_voc)
+
+        print("*"*20, "Training finito", "*"*20)
+        inference_bidirectional(x_test, y_test, x_tokenizer, y_tokenizer)
+        print("*"*20, "Inferenza finita", "*"*20)
+
     else:
+        
         if not os.path.exists('models/monodirectional/10epochs'):
-            computation_monodirectional()
-        #else:
-         #   inference_monodirectional()
+            computation_monodirectional(x_tr, y_tr, x_val, y_val, y_tokenizer, x_tokenizer, x_voc, y_voc)
+
+        print("*"*20, "Training finito", "*"*20)
+        inference_monodirectional(x_test, y_test, x_tokenizer, y_tokenizer)
+        print("*"*20, "Inferenza finita", "*"*20)
+
     

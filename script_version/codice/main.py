@@ -67,6 +67,7 @@ def main():
     # Salta il preprocessing se è già stato fatto
     if not os.path.exists('../final_data/x_tr.npy'):    
         preprocessing_data()
+        
     if not os.path.exists('../final_data/x_test.npy'):   
         preprocessing_data_test()
 
