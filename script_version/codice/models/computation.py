@@ -256,8 +256,7 @@ def inference_bidirectional(x_test, y_test, x_tokenizer, y_tokenizer):
 
     for i in range(0,2000):
         #barra caricamento
-        while i < 2000:
-            progress(i, 2000, status='Doing very long job')
+        progress(i, 2000, status='Doing very long job')
 
         original_text.append(seq2text(x_test[i] ,reverse_source_word_index))
         original_summary.append(seq2summary(y_test[i], target_word_index, reverse_target_word_index))
@@ -285,9 +284,8 @@ def inference_bidirectional(x_test, y_test, x_tokenizer, y_tokenizer):
 
     for i in range(0, len(reference_sentences)):
         #barra caricamento
-        while i < len(reference_sentences):
-            progress(i, len(reference_sentences), status='Doing very long job')
-            # My long python program here   
+        progress(i, len(reference_sentences), status='Doing very long job')
+        # My long python program here   
 
         reference_sentence = reference_sentences[i].split()
         summary_sentence = summary_sentences[i].split()
@@ -305,9 +303,6 @@ def inference_bidirectional(x_test, y_test, x_tokenizer, y_tokenizer):
         list_rouge_r1.append(rouge_r1)
         list_recall_r1.append(recall_r1)
         list_precision_r1.append(precision_r1)
-
-    
-
 
     mean_rouge_r2 = statistics.mean(list_rouge_r2)  
     mean_rouge_r1 = statistics.mean(list_rouge_r1)  
@@ -390,7 +385,6 @@ def inference_monodirectional(x_test, y_test, x_tokenizer, y_tokenizer):
     latent_dim = 300
     embedding_dim=100
 
-
     # Encode the input sequence to get the feature vector
     encoder_inputs = model.input[0]   # input_1
     encoder_outputs, state_h, state_c = model.layers[4].output 
@@ -436,8 +430,7 @@ def inference_monodirectional(x_test, y_test, x_tokenizer, y_tokenizer):
 
     for i in range(0,2000):
         #barra caricamiento
-        while i < 2000:
-            progress(i, 2000, status='Doing very long job')
+        progress(i, 2000, status='Doing very long job')
 
         original_text.append(seq2text(x_test[i], reverse_source_word_index))
         original_summary.append(seq2summary(y_test[i], target_word_index, reverse_target_word_index))
@@ -465,8 +458,7 @@ def inference_monodirectional(x_test, y_test, x_tokenizer, y_tokenizer):
 
     for i in range(0, len(reference_sentences)):
         #barra di frate maronno
-        while i < len(reference_sentences):
-            progress(i, len(reference_sentences), status='Doing very long job')
+        progress(i, len(reference_sentences), status='Doing very long job')
 
         reference_sentence = reference_sentences[i].split()
         summary_sentence = summary_sentences[i].split()
@@ -484,9 +476,6 @@ def inference_monodirectional(x_test, y_test, x_tokenizer, y_tokenizer):
         list_rouge_r1.append(rouge_r1)
         list_recall_r1.append(recall_r1)
         list_precision_r1.append(precision_r1)
-
-
-
 
     mean_rouge_r2 = statistics.mean(list_rouge_r2)  
     mean_rouge_r1 = statistics.mean(list_rouge_r1)  
