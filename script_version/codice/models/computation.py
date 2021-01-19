@@ -40,6 +40,17 @@ from rouge import rouge_w_sentence_level
 from rouge import rouge_w_summary_level
 import pickle
 import pickle
+import time
+
+def progress(count, total, status=''):
+    bar_len = 60
+    filled_len = int(round(bar_len * count / float(total)))
+
+    percents = round(100.0 * count / float(total), 1)
+    bar = '=' * filled_len + '-' * (bar_len - filled_len)
+
+    sys.stdout.write('\r[%s] %s%s ...%s\r' % (bar, percents, '%', status))
+    sys.stdout.flush() 
 
 def decode_sequence(input_seq, encoder_model, target_word_index, decoder_model, reverse_target_word_index, max_summary_len):
     # Encode the input as state vectors.
@@ -244,6 +255,8 @@ def inference_bidirectional(x_test, y_test, x_tokenizer, y_tokenizer):
 
     for i in range(0,2000):
         #barra caricamento
+        while i < 2000:
+            progress(i, 2000, status='Doing very long job')
 
         original_text.append(seq2text(x_test[i] ,reverse_source_word_index))
         original_summary.append(seq2summary(y_test[i], target_word_index, reverse_target_word_index))
@@ -271,7 +284,10 @@ def inference_bidirectional(x_test, y_test, x_tokenizer, y_tokenizer):
 
     for i in range(0, len(reference_sentences)):
         #barra caricamento
-        
+        while i < len(reference_sentences):
+            progress(i, len(reference_sentences), status='Doing very long job')
+            # My long python program here   
+
         reference_sentence = reference_sentences[i].split()
         summary_sentence = summary_sentences[i].split()
         
@@ -419,6 +435,8 @@ def inference_monodirectional(x_test, y_test, x_tokenizer, y_tokenizer):
 
     for i in range(0,2000):
         #barra caricamiento
+        while i < 2000:
+            progress(i, 2000, status='Doing very long job')
 
         original_text.append(seq2text(x_test[i], reverse_source_word_index))
         original_summary.append(seq2summary(y_test[i], target_word_index, reverse_target_word_index))
@@ -446,7 +464,9 @@ def inference_monodirectional(x_test, y_test, x_tokenizer, y_tokenizer):
 
     for i in range(0, len(reference_sentences)):
         #barra di frate maronno
-        
+        while i < len(reference_sentences):
+            progress(i, len(reference_sentences), status='Doing very long job')
+
         reference_sentence = reference_sentences[i].split()
         summary_sentence = summary_sentences[i].split()
         
