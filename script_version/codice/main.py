@@ -6,6 +6,7 @@ from preprocessing.preprocessing_test import preprocessing_data_test
 
 from models.computation import computation
 from models.computation import inference
+from models.transformers import pretrained
 import time
 import pandas as pd
 import os
@@ -72,6 +73,8 @@ def main():
         preprocessing_data_test()
 
     computation(args.model)
+    pretrained()
+
 
 
 if __name__ == "__main__":
