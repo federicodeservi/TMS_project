@@ -6,7 +6,7 @@ from preprocessing.preprocessing_test import preprocessing_data_test
 
 from models.computation import computation
 from models.computation import inference
-from models.transformers import pretrained
+from models.transformers import transformers_execution
 import time
 import pandas as pd
 import os
@@ -73,7 +73,7 @@ def main():
         preprocessing_data_test()
 
     computation(args.model)
-    pretrained()
+    transformers_execution()
 
 
 

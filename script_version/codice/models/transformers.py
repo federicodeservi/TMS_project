@@ -27,8 +27,6 @@ from rouge import rouge_l_summary_level
 from rouge import rouge_w_sentence_level
 from rouge import rouge_w_summary_level
 import statistics
-
-
 import transformers
 from transformers import T5ForConditionalGeneration, T5Tokenizer, BartForConditionalGeneration,  BartTokenizer, PegasusForConditionalGeneration, PegasusTokenizer
 from nltk import word_tokenize, sent_tokenize
@@ -47,13 +45,13 @@ def evaluation_pretrained():
     summary_sentences_bart = results["Created_summary_bart"].to_list()
 
     mean_rouge_r2_t5 = 0
-mean_rouge_r1_t5= 0
-mean_rouge_r2_bart= 0
-mean_rouge_r1_bart= 0
+    mean_rouge_r1_t5= 0
+    mean_rouge_r2_bart= 0
+    mean_rouge_r1_bart= 0
 
-summary_sentences_list = [summary_sentences_t5, summary_sentences_bart]
-mean_rouge_r2_list = [mean_rouge_r2_t5, mean_rouge_r2_bart]
-mean_rouge_r1_list = [mean_rouge_r1_t5, mean_rouge_r1_bart]
+    summary_sentences_list = [summary_sentences_t5, summary_sentences_bart]
+    mean_rouge_r2_list = [mean_rouge_r2_t5, mean_rouge_r2_bart]
+    mean_rouge_r1_list = [mean_rouge_r1_t5, mean_rouge_r1_bart]
 
 for iteration in range(2):
     print("Model: ", iteration)
@@ -100,7 +98,7 @@ def pretrained():
     if tf.test.gpu_device_name(): 
         print('Default GPU Device:{}'.format(tf.test.gpu_device_name()))
     else:
-    print("Please install GPU version of TF")
+        print("Please install GPU version of TF")
 
 # Load data
     data = pd.read_csv("../data_transformer/test_dataset.csv")
