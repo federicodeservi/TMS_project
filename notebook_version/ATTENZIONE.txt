@@ -1,2 +1,0 @@
-Per installare contractions serve installare questo https://visualstudio.microsoft.com/it/thank-you-downloading-visual-studio/?sku=BuildTools&rel=16  per C++
-rouge: https://github.com/neural-dialogue-metrics/rouge
