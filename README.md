@@ -1,4 +1,4 @@
-# Text Mining and Search projec
+# Text Mining and Search project
 
 The aim of this project is to generate summaries for news articles taken from the CNN dataset, through a technique called abstractive text summarization. This involves creating models that generate structurally correct and meaningful summaries from the text. Two different models are created and trained for 20 epochs, to see the results that such models could produce when trained on a highend consumer machine. The performance assessed in terms of ROUGE is low, and this confirms the training complexity of Seq2Seq models. However, some differences in terms of fluency between the two models are found. Also, it is known that in the context of text summarization, quantitative measures must always be accompanied by a human evaluation. After analyzing the predictions of both models it can be said that the bidirectional model is the one that produces lexically more complex results. Performance was then compared with pretrained models such as BART and T5 in order to evaluate
 the differences.
