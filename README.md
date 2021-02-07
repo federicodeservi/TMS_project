@@ -16,8 +16,17 @@ Then install all the libraries used with:
 
 `pip install -r requirements.txt`
 
-If some of the packages are already installed in the PC this operation is faster.
+If some of the packages are already installed in the PC this operation is faster. ROUGE library must be installed separately because it has some dependencies. In particular:
 
+`git clone https://github.com/neural-dialogue-metrics/rouge.git`
+
+`python ./setup.py install`
+
+There can be some dependecies that must be installed due to the version of python, in this case
+
+`pip install git+https://github.com/tagucci/pythonrouge.git`
+
+`python -m doctest ./rouge/*.py -v`
 
 ## General structure
 
