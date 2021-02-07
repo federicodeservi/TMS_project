@@ -1,5 +1,8 @@
 # Text Mining and Search project
 
+The aim of this project is to generate summaries for news articles taken from the CNN dataset, through a technique called abstractive text summarization. This involves creating models that generate structurally correct and meaningful summaries from the text. Two different models are created and trained for 20 epochs, to see the results that such models could produce when trained on a highend consumer machine. The performance assessed in terms of ROUGE is low, and this confirms the training complexity of Seq2Seq models. However, some differences in terms of fluency between the two models are found. Also, it is known that in the context of text summarization, quantitative measures must always be accompanied by a human evaluation. After analyzing the predictions of both models it can be said that the bidirectional model is the one that produces lexically more complex results. Performance was then compared with pretrained models such as BART and T5 in order to evaluate
+the differences.
+
 ## Preparation
 
 We suggest to install all the useful libraries in a virtual environment in order to have the same version and to not create confilcts and warnings.
@@ -28,9 +31,13 @@ There can be some dependecies that must be installed due to the version of pytho
 
 `python -m doctest ./rouge/*.py -v`
 
+In order to install **contractions** you must also install 
+
+https://visualstudio.microsoft.com/it/thank-you-downloading-visual-studio/?sku=BuildTools&rel=16  
+
 ## General structure
 
-For the execution we use the following structure and we create the directory **scaled** inside the directory **data** that store all the data after the preprocessing phase in order to do the preprocessing only one time because it is an expensive computation.
+For the execution we use the following structure.
 
 ```
 project
